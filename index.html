@@ -430,7 +430,7 @@ body.on-home #lia{display:none}
         <p id="voiceInfo" style="margin:8px 0 0"></p>
       </div>
       <div style="margin-top:8px"><button class="pill press" id="voiceTest" style="font-size:16px;padding:8px 16px">▶ Testar</button></div>
-      <p style="margin:8px 0 0;color:#7A7598;font-size:13px">Voz natural: modelo "dii" de OpenVoiceOS (CC BY-NC-SA 4.0), gerada com sherpa-onnx.</p>
+      <p style="margin:8px 0 0;color:#7A7598;font-size:13px">Voz natural: Fernanda (Microsoft Azure, voz neural de Portugal).</p>
     </div>
     <div style="text-align:right;margin-top:10px"><button class="pill press" id="closeParents">Fechar</button></div>
   </div>
@@ -1052,7 +1052,7 @@ const setLevel = (act, n) => store.set('lvl_' + act, n);
 
 /* ---------- Se a criança ficar parada, a Lia volta a chamá-la (no máximo 2 vezes) ---------- */
 let idleT = null, idleCount = 0;
-function idleStart(fn) { idleStop(); idleT = setTimeout(() => { if (idleCount++ < 2) { liaMood('think'); say([pick(SAY.idle), fn()], () => idleStart(fn)); } }, 12000); }
+function idleStart(fn) { idleStop(); idleT = setTimeout(() => { if (idleCount++ < 2) { liaMood('think'); say([pick(SAY.idle), fn()], () => idleStart(fn)); } }, 30000); }
 function idleStop() { clearTimeout(idleT); idleT = null; }
 function refreshVoiceBanner() { $('#noVoice').style.display = audioPack !== undefined && !naturalReady() && !hasDevice() ? '' : 'none'; }
 
