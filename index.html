@@ -1621,13 +1621,15 @@ function checkTrace() {
     if (g) { glyph++; if (k) cov++; }
     if (k) { inkN++; if (tr.wide[i] <= 128) out++; }
   }
+  // coverage: parte da letra pintada · outside: parte da tinta fora da zona de tolerância à volta da letra
   const coverage = cov / glyph, outside = inkN ? out / inkN : 0;
-  if (inkN > glyph * .25 && outside > .45) {
+  const tooMuchOut = out > glyph * .25 || (inkN > glyph * .3 && outside > .15);
+  if (tooMuchOut) {
     tr.mistakes++; sfxBad(); liaMood('think'); tr.locked = true;
     say(SAY.traceOut, () => { if (!tr) return; clearInk(); tr.locked = false; idleStart(() => tr && tracePrompt()); });
     return;
   }
-  if (coverage >= .6) {
+  if (coverage >= .65 && outside <= .15) {
     tr.locked = true; $('#trBox').classList.add('ok'); liaMood('happy'); sfxGood();
     const p = praiseText(); praiseFx(showText(p));
     say([T(traceName(tr.list[tr.i])), p], () => setTimeout(() => {
