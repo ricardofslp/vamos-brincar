@@ -1,5 +1,5 @@
 // Guarda o jogo no telemóvel para funcionar sem internet.
-const CACHE = 'vamos-brincar-c2bfb18ed8';
+const CACHE = 'vamos-brincar-1a4d1c7899';
 const FILES = [
   "./",
   "audio/pt.json",
