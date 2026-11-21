@@ -19,5 +19,6 @@ Depois da primeira visita, o jogo funciona **sem internet**.
 
 ## Créditos
 - **Voz em português:** Fernanda (pt-PT-FernandaNeural), voz neural do Microsoft Azure AI Speech.
+- **Sons de animais** (Freesound, recolhidos no pacote [sounds](https://github.com/antummt/mod-sounds) do Minetest): domínio público (CC0), exceto o gato (blimp66, https://freesound.org/s/397661/), a galinha (www.bonson.ca, https://freesound.org/s/24967/) e o porco (yottasounds, https://freesound.org/s/174615/), com a licença CC BY 3.0.
 - **Tipos de letra:** Andika (SIL International) e Fredoka, ambos com a licença SIL Open Font License 1.1 (ver `fonts/`).
 - Os desenhos são emojis do próprio dispositivo.

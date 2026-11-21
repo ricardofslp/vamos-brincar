@@ -430,7 +430,7 @@ body.on-home #lia{display:none}
         <p id="voiceInfo" style="margin:8px 0 0"></p>
       </div>
       <div style="margin-top:8px"><button class="pill press" id="voiceTest" style="font-size:16px;padding:8px 16px">▶ Testar</button></div>
-      <p style="margin:8px 0 0;color:#7A7598;font-size:13px">Voz natural: Fernanda (Microsoft Azure, voz neural de Portugal).</p>
+      <p style="margin:8px 0 0;color:#7A7598;font-size:13px">Voz natural: Fernanda (Microsoft Azure, voz neural de Portugal). Sons de animais: Freesound, em domínio público (CC0), exceto o gato (blimp66), a galinha (www.bonson.ca) e o porco (yottasounds), com a licença CC BY 3.0.</p>
     </div>
     <div style="text-align:right;margin-top:10px"><button class="pill press" id="closeParents">Fechar</button></div>
   </div>
@@ -513,7 +513,7 @@ const SAY = {
   dayFirst: 'O que acontece primeiro?', dayThen: 'E depois?', dayLast: 'E no fim?', dayNotYet: 'Ainda não. Isso vem depois.',
   dayHow: 'Põe as imagens por ordem. Toca no que acontece primeiro.',
   // sons
-  soundQ: 'Quem faz assim?',
+  soundQ: 'Quem faz este som?',
   // emoções
   feelQ: 'Como se sente?',
   // pontos
@@ -563,8 +563,8 @@ const LEVELS = {
     { label: 'Tudo', desc: 'Agora tudo misturado!', instr: 'Ouve bem e toca na imagem certa.', pos: ['cima_mesa', 'baixo_mesa', 'lado_mesa', 'dentro_caixa', 'fora_caixa', 'cima_caixa'], n: 4 }
   ],
   sounds: [
-    { label: '3 animais', desc: 'Ouve o som do animal.', instr: 'Eu faço o som e tu descobres o animal.', n: 3 },
-    { label: '4 animais', desc: 'Agora com quatro animais!', instr: 'Eu faço o som e tu descobres o animal.', n: 4 }
+    { label: '3 animais', desc: 'Ouve o som do animal.', instr: 'Ouve o som e descobre qual é o animal.', n: 3 },
+    { label: '4 animais', desc: 'Agora com quatro animais!', instr: 'Ouve o som e descobre qual é o animal.', n: 4 }
   ],
   day: [
     { label: '3 imagens', desc: 'Histórias de três imagens.', n: 3 },
@@ -716,12 +716,17 @@ const sayFindPos = (a, k) => `Encontra o ${a} ${POS[k].p}.`;
 const sayIsPos = (a, k) => `O ${a} está ${POS[k].p}.`;
 
 /* ---------- Sons ---------- */
+// [emoji, som real (audio/sfx.json), frase final, imitação da Lia se o som real faltar]
 const SOUNDS = [
-  ['🐱', 'Miau, miau!', 'O gato faz miau.'], ['🐶', 'Ão, ão, ão!', 'O cão faz ão, ão.'], ['🐮', 'Muuu!', 'A vaca faz muuu.'],
-  ['🦆', 'Quá, quá, quá!', 'O pato faz quá, quá.'], ['🐔', 'Có, có, có!', 'A galinha faz có, có, có.'], ['🐓', 'Cocorocó!', 'O galo faz cocorocó.'],
-  ['🐑', 'Méééé!', 'A ovelha faz méééé.'], ['🐷', 'Óinc, óinc!', 'O porco faz óinc, óinc.'], ['🐸', 'Croac, croac!', 'O sapo faz croac, croac.'],
-  ['🦉', 'Uuu, uuu!', 'O mocho faz uuu, uuu.']
+  ['🐱', 'gato', 'O gato mia.', 'Miau, miau!'], ['🐶', 'cao', 'O cão ladra.', 'Ão, ão, ão!'], ['🐮', 'vaca', 'A vaca muge.', 'Muuu!'],
+  ['🦆', 'pato', 'O pato grasna.', 'Quá, quá, quá!'], ['🐔', 'galinha', 'A galinha cacareja.', 'Có, có, có!'], ['🐓', 'galo', 'O galo canta.', 'Cocorocó!'],
+  ['🐑', 'ovelha', 'A ovelha bale.', 'Méééé!'], ['🐷', 'porco', 'O porco grunhe.', 'Óinc, óinc!'], ['🐸', 'sapo', 'O sapo coaxa.', 'Croac, croac!'],
+  ['🦉', 'mocho', 'O mocho pia.', 'Uuu, uuu!'], ['🐴', 'cavalo', 'O cavalo relincha.', null], ['🦁', 'leao', 'O leão ruge.', null],
+  ['🐝', 'abelha', 'A abelha zumbe.', null]
 ];
+// animais com sons parecidos que não aparecem juntos na mesma pergunta
+const SOUND_CLASH = { galinha: 'galo', galo: 'galinha' };
+const SFX = (k, alt) => ({ sfx: k, alt });
 
 /* ---------- O meu dia ---------- */
 const DAYS = [
@@ -812,7 +817,7 @@ function speakables() {
   COLOR_THINGS.forEach(([, o, , s]) => { add(sayColorOf(o)); add(s); });
   for (let n = 1; n <= 5; n++) add(sayPartIs(n));
   PLACE_ANIMALS.forEach(([, a]) => Object.keys(POS).forEach(k => { add(sayFindPos(a, k)); add(sayIsPos(a, k)); }));
-  SOUNDS.forEach(([, s, e]) => { add(s); add(e); });
+  SOUNDS.forEach(([, , e, alt]) => { add(e); add(alt); });
   DAYS.forEach(d => d.forEach(([, c]) => add(c)));
   WEATHER.forEach(w => add(w.q));
   Object.values(CLOTHES).forEach(c => add(T(c)));
@@ -852,12 +857,14 @@ function bagOf(list, n = ROUND) { const out = []; let bag = []; while (out.lengt
 /* ---------- Voz: áudio gravado (natural) ou voz do dispositivo ---------- */
 let voiceMode = store.get('voiceMode', 'natural');
 let audioPack;            // undefined = a carregar · null = falhou · objeto = pronto
+let sfxPack = null;       // sons reais (animais)
 const bufCache = {};
 const keyOf = p => typeof p === 'object' ? (p.target ? 'T|' : '') + p.t : p;
 window.__missing = new Set();
 async function loadAudio() {
   try { const r = await fetch('audio/pt.json'); if (!r.ok) throw new Error(r.status); audioPack = await r.json(); }
   catch (e) { audioPack = null; }
+  try { const r = await fetch('audio/sfx.json'); if (r.ok) sfxPack = await r.json(); } catch (e) {}
   refreshVoiceBanner();
   if ($('#parents').classList.contains('on')) renderVoiceSettings();
 }
@@ -870,11 +877,11 @@ function ctx() { if (!actx) actx = new (window.AudioContext || window.webkitAudi
 document.addEventListener('pointerdown', () => { try { const c = ctx(); if (c.state === 'suspended') c.resume(); } catch (e) {} }, true);
 let curSrc = null;
 function b64buf(b64) { const bin = atob(b64), a = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i); return a.buffer; }
-async function playClip(key, token) {
+async function playClip(key, token, b64) {
   const c = ctx();
   if (c.state === 'suspended') { try { await Promise.race([c.resume(), wait(400)]); } catch (e) {} }
   let buf = bufCache[key];
-  if (!buf) { buf = await new Promise((res, rej) => c.decodeAudioData(b64buf(audioPack[key]), res, rej)); bufCache[key] = buf; }
+  if (!buf) { buf = await new Promise((res, rej) => c.decodeAudioData(b64buf(b64 || audioPack[key]), res, rej)); bufCache[key] = buf; }
   if (token !== speakToken) return;
   await new Promise(res => {
     const s = c.createBufferSource(); s.buffer = buf; s.connect(c.destination);
@@ -958,8 +965,19 @@ function say(parts, onend, onpart) {
     await wait(60);
     if (!natural && hasDevice()) { try { const u = new SpeechSynthesisUtterance('.'); u.volume = 0; liveUtterances.push(u); speechSynthesis.speak(u); } catch (e) {} }
     for (let i = 0; i < parts.length; i++) {
-      const p = parts[i];
+      let p = parts[i];
       if (token !== speakToken) return;
+      // som real (ex.: um animal); se faltar, a Lia imita-o
+      if (typeof p === 'object' && p.sfx) {
+        if (sfxPack && sfxPack[p.sfx]) {
+          liaShow('🔊 🎵'); onpart && onpart(i);
+          try { await playClip('sfx|' + p.sfx, token, sfxPack[p.sfx]); } catch (e) { await wait(300); }
+          if (token !== speakToken) return;
+          await wait(250); continue;
+        }
+        if (!p.alt) continue;
+        p = p.alt;
+      }
       const isObj = typeof p === 'object', text = isObj ? p.t : p, shown = isObj && p.show ? p.show : text;
       liaShow(isObj && p.target ? `<b>${esc(text)}</b>` : esc(shown));
       onpart && onpart(i);
@@ -1200,8 +1218,15 @@ function makePlace(lv) {
 /* ---------- Quem faz este som? ---------- */
 function makeSounds(lv) {
   return bagOf(SOUNDS).map(s => {
-    const opts = optsOf(s, SOUNDS, lv.n);
-    return { options: opts.map(o => ({ id: o[0], html: emoSpan(o[0]) })), answer: s[0], prompt: [SAY.soundQ, s[1]], echo: [s[2]] };
+    // escolhe as opções sem pôr juntos animais com sons parecidos (galinha e galo)
+    const opts = [s];
+    for (const o of shuffle(SOUNDS)) {
+      if (opts.length >= lv.n) break;
+      if (opts.includes(o) || opts.some(x => SOUND_CLASH[x[1]] === o[1])) continue;
+      opts.push(o);
+    }
+    return { options: shuffle(opts).map(o => ({ id: o[0], html: emoSpan(o[0]) })), answer: s[0],
+             prompt: [SAY.soundQ, SFX(s[1], s[3])], echo: [s[2], SFX(s[1], s[3])] };
   });
 }
 
