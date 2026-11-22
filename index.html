@@ -241,9 +241,26 @@ body.on-home #lia{display:none}
 #liaBubble b{color:var(--orange);font-family:'Andika',sans-serif;font-size:1.25em}
 #home .mascot.talk{animation:talk .45s ease-in-out infinite alternate}
 @media (max-width:420px){.lvl{font-size:16px}.node{width:46%}}
+
+/* --- correções 22/11/2026 --- */
+.screen>*{flex-shrink:0}
+#loading{position:fixed;inset:0;z-index:40;display:flex;align-items:center;justify-content:center;background:var(--bg);transition:opacity .4s}
+#loading.hide{opacity:0;pointer-events:none}
+#loading .box{display:flex;flex-direction:column;align-items:center;gap:14px;font-size:clamp(20px,4vw,26px);font-weight:600;color:var(--ink);text-align:center;padding:20px}
+#loading .owl{font-size:90px;line-height:1;animation:bob 1.6s ease-in-out infinite}
+#loading .bar{width:min(70vw,320px);height:18px;border-radius:9px;background:#fff;box-shadow:var(--shadow);overflow:hidden}
+#loading .bar i{display:block;height:100%;width:3%;background:var(--green);border-radius:9px;transition:width .2s}
+@media (max-width:600px){#lia:not(.talk) #liaOwl{font-size:42px;opacity:.5;pointer-events:none}}
+.opt.scene{width:clamp(130px,40vw,180px)}
+.panimal{font-size:clamp(38px,8vw,50px)}
+.pbox .flap{position:absolute;top:0;height:26%;width:50%;background:#D99A45;border:3px solid #B5762C;border-radius:4px;z-index:3}
+.pbox .flap.l{left:0;transform-origin:left top;transform:translateY(-100%) rotate(-38deg);transform-origin:left bottom}
+.pbox .flap.r{right:0;transform:translateY(-100%) rotate(38deg);transform-origin:right bottom}
+.dotsvg .num{font-size:5.5px}
 </style>
 </head>
 <body>
+<div id="loading"><div class="box"><div class="owl">🦉</div><div id="loadMsg">A Lia está a chegar…</div><div class="bar"><i id="loadBar"></i></div></div></div>
 <!-- MAPA (INÍCIO) -->
 <section id="home" class="screen active">
   <div class="topbar">
@@ -444,6 +461,7 @@ body.on-home #lia{display:none}
    Regra: cada fala é uma frase inteira, para ter um áudio correspondente.
    ===================================================================== */
 const T = s => ({ t: s, target: true });       // palavra-alvo: dita mais devagar
+const J = (pre, t) => ({ j: pre, t, target: true });
 const NUM = ['zero','um','dois','três','quatro','cinco','seis','sete','oito','nove','dez'];
 const cap = s => s[0].toUpperCase() + s.slice(1);
 
@@ -734,7 +752,7 @@ const DAYS = [
   [['🛁', 'Tomar banho.'], ['🍝', 'Jantar.'], ['📖', 'Ouvir uma história.'], ['😴', 'Dormir.']],
   [['🌰', 'Semear.'], ['💧', 'Regar.'], ['🌱', 'A planta nasce.'], ['🌻', 'Dá flor.']],
   [['🥚', 'O ovo.'], ['🐣', 'O pintainho parte a casca.'], ['🐥', 'O pintainho cresce.'], ['🐔', 'Fica uma galinha.']],
-  [['🌅', 'De manhã.'], ['☀️', 'Ao meio-dia.'], ['🌇', 'Ao fim da tarde.'], ['🌙', 'À noite.']],
+  [['🐓', 'De manhã.'], ['☀️', 'Ao meio-dia.'], ['🌇', 'Ao fim da tarde.'], ['🌙', 'À noite.']],
   [['🛒', 'Comprar os ingredientes.'], ['🥣', 'Misturar tudo.'], ['♨️', 'Pôr no forno.'], ['🎂', 'Comer o bolo!']],
   [['☁️', 'Aparecem nuvens escuras.'], ['🌧️', 'Chove.'], ['🌤️', 'Volta o sol.'], ['🌈', 'Aparece o arco-íris.']]
 ];
@@ -743,9 +761,9 @@ const DAYS = [
 const WEATHER = [
   { e: '☀️🥵', q: 'Está muito calor! O que levamos?', good: ['🕶️', '🩳', '👒', '🩴'] },
   { e: '❄️⛄', q: 'Está muito frio! O que vestimos?', good: ['🧣', '🧤', '🧥'] },
-  { e: '🌧️☔', q: 'Está a chover! O que levamos?', good: ['☂️', '🥾'] }
+  { e: '🌧️☔', q: 'Está a chover! O que levamos?', good: ['☂️'] }
 ];
-const CLOTHES = { '🕶️': 'os óculos de sol', '🩳': 'os calções', '👒': 'o chapéu', '🩴': 'os chinelos', '🧣': 'o cachecol', '🧤': 'as luvas', '🧥': 'o casaco', '☂️': 'o guarda-chuva', '🥾': 'as botas' };
+const CLOTHES = { '🕶️': 'os óculos de sol', '🩳': 'os calções', '👒': 'o chapéu', '🩴': 'os chinelos', '🧣': 'o cachecol', '🧤': 'as luvas', '🧥': 'o casaco', '☂️': 'o guarda-chuva' };
 const SEASONS = [
   { id: 'primavera', e: ['🌷', '🐝', '🌸', '🦋'], q: 'Qual é a primavera?', fact: 'Na primavera nascem as flores.' },
   { id: 'verão', e: ['☀️', '🏖️', '🍉', '🩳'], q: 'Qual é o verão?', fact: 'No verão está calor e vamos à praia.' },
@@ -758,7 +776,7 @@ const EMOS = {
   alegre: { e: '😀', face: 'Toca na cara alegre.', echo: 'Que alegria!' },
   triste: { e: '😢', face: 'Toca na cara triste.', echo: 'Que tristeza.' },
   zangado: { e: '😠', face: 'Toca na cara zangada.', echo: 'Que zanga!' },
-  assustado: { e: '😨', face: 'Toca na cara assustada.', echo: 'Que medo!' },
+  assustado: { e: '😱', face: 'Toca na cara assustada.', echo: 'Que medo!' },
   surpreendido: { e: '😮', face: 'Toca na cara surpreendida.', echo: 'Que surpresa!' }
 };
 const STORIES = [
@@ -803,6 +821,7 @@ const STICKERS = ['🦄','🐉','🦖','🦕','🐙','🦋','🐞','🐢','🦊'
 function speakables() {
   const out = new Map();
   const add = p => { if (!p) return; if (Array.isArray(p)) return p.forEach(add);
+    if (typeof p === 'object' && p.j) { const k = 'J|' + p.j + '|' + p.t; out.set(k, { key: k, text: p.j + ' ' + p.t, target: true, pre: p.j, word: p.t }); return; }
     const k = typeof p === 'object' ? 'T|' + p.t : p; out.set(k, { key: k, text: typeof p === 'object' ? p.t : p, target: typeof p === 'object' }); };
   const walk = o => { if (typeof o === 'string') add(o); else if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') Object.values(o).forEach(walk); };
   walk(SAY);
@@ -828,6 +847,8 @@ function speakables() {
   for (let n = 2; n <= 10; n++) add(sayFindDot(n));
   Object.values(LETTER_NAMES).forEach(n => add(T(n)));
   SCENES.forEach(s => add(s.name));
+  // frases inteiras do Traçar ("Desenha o número três.")
+  LEVELS.trace.forEach(lv => lv.set.forEach(g => add(J(lv.kind === 'num' ? SAY.traceNum : SAY.traceLetter, lv.kind === 'num' ? NUM[+g] : LETTER_NAMES[g.toLowerCase()]))));
   return [...out.values()];
 }
 </script>
@@ -859,12 +880,36 @@ let voiceMode = store.get('voiceMode', 'natural');
 let audioPack;            // undefined = a carregar · null = falhou · objeto = pronto
 let sfxPack = null;       // sons reais (animais)
 const bufCache = {};
-const keyOf = p => typeof p === 'object' ? (p.target ? 'T|' : '') + p.t : p;
+const keyOf = p => typeof p === 'object' ? (p.j ? 'J|' + p.j + '|' + p.t : (p.target ? 'T|' : '') + p.t) : p;
 window.__missing = new Set();
+
+/* ---------- Carregar a voz gravada, com barra de progresso ----------
+   Enquanto carrega, mostra o ecrã "A Lia está a chegar…" em vez de falar com a voz do telemóvel. */
+async function fetchJSONProgress(url, onp) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(r.status);
+  const len = +r.headers.get('Content-Length') || 0, gz = /gzip|br|deflate/.test(r.headers.get('Content-Encoding') || '');
+  if (!r.body || !r.body.getReader || !len) return r.json();
+  const total = gz ? len / 0.76 : len, rd = r.body.getReader(), parts = [];
+  let got = 0;
+  for (;;) { const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; onp && onp(Math.min(.99, got / total)); }
+  return JSON.parse(await new Blob(parts).text());
+}
+let loadingTimer = null;
+function loadingShow(on, frac) {
+  const el = document.getElementById('loading'); if (!el) return;
+  el.classList.toggle('hide', !on);
+  if (frac != null) document.getElementById('loadBar').style.width = Math.max(3, frac * 100) + '%';
+  clearTimeout(loadingTimer);
+  if (on) loadingTimer = setTimeout(() => el.classList.add('hide'), 30000);   // nunca prender a criança mais de 30 s
+}
 async function loadAudio() {
-  try { const r = await fetch('audio/pt.json'); if (!r.ok) throw new Error(r.status); audioPack = await r.json(); }
+  const showIt = voiceMode === 'natural';
+  loadingShow(showIt, 0);
+  try { audioPack = await fetchJSONProgress('audio/pt.json', f => showIt && loadingShow(true, f * .97)); }
   catch (e) { audioPack = null; }
   try { const r = await fetch('audio/sfx.json'); if (r.ok) sfxPack = await r.json(); } catch (e) {}
+  loadingShow(false);
   refreshVoiceBanner();
   if ($('#parents').classList.contains('on')) renderVoiceSettings();
 }
@@ -955,6 +1000,7 @@ function say(parts, onend, onpart) {
   try { if (curSrc) curSrc.stop(); } catch (e) {}
   if (hasDevice()) try { speechSynthesis.cancel(); } catch (e) {}
   const natural = useNatural();
+  parts = parts.flatMap(p => (p && p.j && !(natural && audioPack && audioPack[keyOf(p)])) ? [p.j, T(p.t)] : [p]);
   if (!natural && !onpart) {
     const merged = [];
     parts.forEach(p => { const last = merged[merged.length - 1];
@@ -979,7 +1025,7 @@ function say(parts, onend, onpart) {
         p = p.alt;
       }
       const isObj = typeof p === 'object', text = isObj ? p.t : p, shown = isObj && p.show ? p.show : text;
-      liaShow(isObj && p.target ? `<b>${esc(text)}</b>` : esc(shown));
+      liaShow(isObj && p.j ? `${esc(p.j)} <b>${esc(p.t)}</b>` : isObj && p.target ? `<b>${esc(text)}</b>` : esc(shown));
       onpart && onpart(i);
       const key = keyOf(p);
       try {
@@ -1060,7 +1106,13 @@ function levelBar(container, levels, current, onPick, back) {
     container.appendChild(b);
   });
 }
-const levelIntro = (lv, n, instr) => [N(pick(SAY.start), .6), SAY.levels[n - 1], lv.desc, instr];
+// a explicação completa só na primeira vez de cada nível; depois, só "Vamos jogar!"
+const levelIntro = (lv, n, instr) => {
+  const k = 'intro_' + lv.desc;
+  if (store.get(k, false)) return [N(pick(SAY.start), .6)];
+  store.set(k, true);
+  return [N(pick(SAY.start), .6), SAY.levels[n - 1], lv.desc, instr];
+};
 const praiseText = () => N(pick(SAY.praise));
 const showText = p => typeof p === 'object' ? (p.show || p.t) : p;
 const starsFor = mistakes => mistakes === 0 ? 3 : mistakes <= Math.ceil(ROUND * 0.6) ? 2 : 1;
@@ -1090,7 +1142,7 @@ function startQuiz(cfg) {
 }
 function renderQuestion() {
   const q = quiz.questions[quiz.i];
-  dots($('#quizDots'), quiz.total, quiz.i);
+  dots($('#quizDots'), quiz.questions.length, quiz.i);
   $('#quizShow').innerHTML = q.show || '';
   $('#quizShow').style.display = q.show ? '' : 'none';
   const box = $('#quizOpts'); box.innerHTML = '';
@@ -1117,6 +1169,8 @@ function answer(btn, opt) {
   idleStop(); idleCount = 0;
   if (opt.id === q.answer) {
     quiz.locked = true;
+    // o que falhou volta a aparecer no fim da ronda (uma vez)
+    if (q.missed && !q.repeat) quiz.questions.push(Object.assign({}, q, { missed: false, repeat: true, options: shuffle(q.options) }));
     quiz.streak = q.missed ? 0 : quiz.streak + 1;
     liaMood('happy'); btn.classList.add('right');
     $$('#quizOpts .opt').forEach(o => { if (o !== btn) o.classList.add('fade'); });
@@ -1132,7 +1186,7 @@ function answer(btn, opt) {
 function nextQuestion() {
   if (!quiz) return;
   quiz.i++;
-  if (quiz.i >= quiz.total) { const q = quiz; quiz = null; finish(starsFor(q.mistakes), q.again, q.next, q.act, q.level); return; }
+  if (quiz.i >= quiz.questions.length) { const q = quiz; quiz = null; finish(starsFor(q.mistakes), q.again, q.next, q.act, q.level); return; }
   renderQuestion();
   say(pick(SAY.next), () => askQuestion());
 }
@@ -1197,11 +1251,13 @@ function placeScene(e, k) {
   const ref = POS[k].ref;
   const st = {
     cima_mesa: 'left:50%;bottom:53%', baixo_mesa: 'left:50%;bottom:19%;font-size:clamp(28px,6vw,38px)', lado_mesa: 'left:85%;bottom:17%',
-    dentro_caixa: 'left:50%;bottom:33%', fora_caixa: 'left:86%;bottom:17%', cima_caixa: 'left:50%;bottom:49%;z-index:3'
+    dentro_caixa: 'left:50%;bottom:43%', fora_caixa: 'left:86%;bottom:17%', cima_caixa: 'left:50%;bottom:49%;z-index:4'
   }[k];
   const refHTML = ref === 'mesa'
     ? '<div class="ptable" style="' + (k === 'lado_mesa' ? 'left:10%' : '') + '"><div class="top"></div><div class="leg l"></div><div class="leg r"></div></div>'
-    : '<div class="pbox" style="' + (k === 'fora_caixa' ? 'left:12%' : '') + '"><div class="backw"></div><div class="front"></div></div>';
+    // caixa aberta (com abas) para "dentro" e "fora"; fechada para "em cima"
+    : '<div class="pbox" style="' + (k === 'fora_caixa' ? 'left:12%' : '') + '"><div class="backw"></div><div class="front"></div>'
+      + (k === 'cima_caixa' ? '' : '<div class="flap l"></div><div class="flap r"></div>') + '</div>';
   return `<div class="pscene">${refHTML}<span class="panimal emo" style="${st}">${e}</span></div>`;
 }
 function makePlace(lv) {
@@ -1538,9 +1594,18 @@ function renderDots(first) {
   dots($('#dtDots'), dt.list.length, dt.i);
   $('#dtReveal').textContent = '';
   const cx = pts.reduce((a, p) => a + p[0], 0) / pts.length, cy = pts.reduce((a, p) => a + p[1], 0) / pts.length;
-  const lab = ([x, y]) => { const dx = x - cx, dy2 = y - cy, d = Math.hypot(dx, dy2) || 1; return [x + dx / d * 6, y + dy2 / d * 6]; };
+  // número de cada ponto do lado de fora do ângulo (para os números não se amontoarem)
+  const lab = ([x, y], k) => {
+    const a = pts[(k - 1 + pts.length) % pts.length], b = pts[(k + 1) % pts.length];
+    const u = (px, py) => { const d = Math.hypot(px, py) || 1; return [px / d, py / d]; };
+    const u1 = u(x - a[0], y - a[1]), u2 = u(x - b[0], y - b[1]);
+    let [nx, ny] = [u1[0] + u2[0], u1[1] + u2[1]];
+    if (Math.hypot(nx, ny) < .2) [nx, ny] = [-u1[1], u1[0]];
+    if (Math.hypot(nx, ny) < .2) [nx, ny] = [x - cx, y - cy];
+    const n = u(nx, ny); return [x + n[0] * 6.5, y + n[1] * 6.5];
+  };
   $('#dtSvg').innerHTML = `<polygon class="fillshape" points="${pts.map(p => p.join(',')).join(' ')}" style="opacity:0"/><g id="dtLines"></g>`
-    + pts.map((p, k) => { const [lx, ly] = lab(p); return `<circle class="pt" data-k="${k}" cx="${p[0]}" cy="${p[1]}" r="2.2"/><text class="num" x="${lx}" y="${ly}">${k + 1}</text>`; }).join('')
+    + pts.map((p, k) => { const [lx, ly] = lab(p, k); return `<circle class="pt" data-k="${k}" cx="${p[0]}" cy="${p[1]}" r="2.2"/><text class="num" x="${lx}" y="${ly}">${k + 1}</text>`; }).join('')
     + pts.map((p, k) => `<circle class="hit" data-k="${k}" cx="${p[0]}" cy="${p[1]}" r="6"/>`).join('');
   $$('#dtSvg .hit').forEach(h => h.onclick = () => tapDot(+h.dataset.k));
   markNextDot();
@@ -1586,7 +1651,7 @@ function openTrace(level) {
   try { document.fonts.load(glyphFont(100)).then(go, go); } catch (e) { go(); }
 }
 const traceName = g => tr.lv.kind === 'num' ? NUM[+g] : LETTER_NAMES[g.toLowerCase()];
-const tracePrompt = () => [tr.lv.kind === 'num' ? SAY.traceNum : SAY.traceLetter, T(traceName(tr.list[tr.i]))];
+const tracePrompt = () => [J(tr.lv.kind === 'num' ? SAY.traceNum : SAY.traceLetter, traceName(tr.list[tr.i]))];
 function drawGlyph(g, S, ctx2, mode) {
   ctx2.font = glyphFont(Math.round(S * .84)); ctx2.textAlign = 'center'; ctx2.textBaseline = 'alphabetic';
   const m = ctx2.measureText(g), y = S / 2 + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
